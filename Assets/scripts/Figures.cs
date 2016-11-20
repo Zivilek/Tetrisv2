@@ -16,7 +16,7 @@ public class Figures : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-
+        //spawnNewFigure();
 	}
 	
 	// Update is called once per frame
@@ -25,7 +25,7 @@ public class Figures : MonoBehaviour {
         checkUserInput();
 	}
 
-    void checkUserInput ()
+    void checkUserInput()
     {
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
@@ -50,7 +50,7 @@ public class Figures : MonoBehaviour {
         else if (Input.GetKeyDown(KeyCode.DownArrow) || Time.time - fall >= fallSpeed)
         {
             transform.position += new Vector3(0, -1, 0);
-            fall = Time.time;
+            
             if (!checkIfInsideGrid())
             {
                 transform.position += new Vector3(0, 1, 0);
@@ -59,27 +59,56 @@ public class Figures : MonoBehaviour {
             }
             else
                 UpdateGrid();
+            fall = Time.time;
         }
         else if (Input.GetKeyDown(KeyCode.UpArrow))
         {
             if (allowRotation)
             {
-                /*transform.Rotate(0, 0, 90);
-                if (checkIfInsideGrid())
+                /*Transform figure = transform;
+                RigidbodyInterpolation interp = figure.rigidbody.inter;
+                obj.rigidbody.interpolation = RigidbodyInterpolation.None;
+                obj.transform.eulerAngles = new Vector3(0, 0, 90);
+                obj.rigidbody.interpolation = interp;*/
+
+                //transform.eulerAngles = new Vector3(0, 0, 90);
+                // transform.rotation = new Quaternion.Euler(new Vector3(0, 0, 90));
+                //transform.position += new Vector3(0, 90, 0);
+                //transform.localScale += new Vector3(0, 90, 00);
+                transform.Rotate(0, 0, 90);
+                //transform.position = new Vector3(transform.position.x)
+                if (!checkIfInsideGrid())
+                {
+                    //transform.position += new Vector3(0, -90, 0);
+                    //transform.localScale += new Vector3(0, -90, 0);
+                    transform.Rotate(0, 0, -90);
+                }
+                    //transform.rotation = new Quaternion(0, 0, 90, 0);
+                //transform.eulerAngles = new Vector3(0, 0, -90);
+                else
+                    UpdateGrid();
+               
+
+                /*if (limitRotation && transform.rotation.eulerAngles.z >= 90)
+                {
+                    transform.Rotate(0, 0, -180);
+                    if (checkIfInsideGrid())
+                    {
+                        UpdateGrid();
+                    }
+                    else
+                        transform.Rotate(0, 0, -90);
+                }
+                else if (checkIfInsideGrid())
                 {
                     UpdateGrid();
                 }
                 else if (!checkIfInsideGrid())
                 {
                     transform.Rotate(0, 0, -90);
-                }
-                else if (limitRotation && transform.rotation.eulerAngles.z >= 90)
-                {
-                    transform.Rotate(0, 0, -180);
-                    UpdateGrid();
                 }*/
 
-                if (limitRotation)
+                /*if (limitRotation)
                 {
                     if(transform.rotation.eulerAngles.z >= 90)
                     {
@@ -116,20 +145,21 @@ public class Figures : MonoBehaviour {
                         transform.Rotate(0, 0, -90);
                     }
                 }
+            }*/
             }
         }
     }
 
     public void UpdateGrid()
     {
-        for (int y = -8; y < 9; y++)
+        for (int y = -8; y < 9; ++y)
         {
-            for (int x = -5; x <= 5; x++)
+            for (int x = -5; x < 6; ++x)
             {
-                if (grid[x+5,y+9] != null)
+                if (grid[x+5,y+8] != null)
                 {
-                    if (grid[x+5, y+9].parent == transform)
-                        grid[x+5, y+9] = null;
+                    if (grid[x+5, y+8].parent == transform)
+                        grid[x+5, y+8] = null;
                 }
             }
         }
@@ -138,17 +168,17 @@ public class Figures : MonoBehaviour {
             Vector2 position = figure.position;
             if (position.y < 9)
             {
-                grid[(int)position.x+5, (int)position.y+9] = figure;
+                grid[(int)(position.x)+5, (int)(position.y)+8] = figure;
             }
         }
     }
 
     public Transform GetTransformAtGridPosition(Vector2 position)
     {
-        if (position.y > 9)
+        if (position.y > 10)
             return null;
         else
-            return grid[(int)position.x+5, (int)position.y+9];
+            return grid[(int)(position.x)+5, (int)(position.y)+8];
     }
 
     public bool checkIfInsideGrid()
@@ -160,7 +190,7 @@ public class Figures : MonoBehaviour {
             {
                 return false;
             }
-            if (GetTransformAtGridPosition(position) !=null && 
+            if (GetTransformAtGridPosition(position) != null && 
                 GetTransformAtGridPosition(position).parent != transform)
             {
                 return false;
