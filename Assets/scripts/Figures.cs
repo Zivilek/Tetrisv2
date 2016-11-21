@@ -1,29 +1,32 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Figures : MonoBehaviour {
+public class Figures : MonoBehaviour
+{
 
     float fall = 0;
     public float fallSpeed = 1;
 
     public bool allowRotation = true;
-    public bool limitRotation = false;
+    //public bool limitRotation = false;
 
     public int gridWidth = 11;
     public int gridHeight = 18;
 
-    public static Transform[,] grid = new Transform[20,30]; 
+    public static Transform[,] grid = new Transform[20, 30];
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start()
+    {
         //spawnNewFigure();
-	}
-	
-	// Update is called once per frame
-	void Update () {
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
 
         checkUserInput();
-	}
+    }
 
     void checkUserInput()
     {
@@ -50,10 +53,13 @@ public class Figures : MonoBehaviour {
         else if (Input.GetKeyDown(KeyCode.DownArrow) || Time.time - fall >= fallSpeed)
         {
             transform.position += new Vector3(0, -1, 0);
-            
+
             if (!checkIfInsideGrid())
             {
                 transform.position += new Vector3(0, 1, 0);
+                DeleteRowsIfNeeded();
+                if (checkIfGameOver())
+                    loadGameOver();
                 enabled = false;
                 spawnNewFigure();
             }
@@ -65,29 +71,14 @@ public class Figures : MonoBehaviour {
         {
             if (allowRotation)
             {
-                /*Transform figure = transform;
-                RigidbodyInterpolation interp = figure.rigidbody.inter;
-                obj.rigidbody.interpolation = RigidbodyInterpolation.None;
-                obj.transform.eulerAngles = new Vector3(0, 0, 90);
-                obj.rigidbody.interpolation = interp;*/
-
-                //transform.eulerAngles = new Vector3(0, 0, 90);
-                // transform.rotation = new Quaternion.Euler(new Vector3(0, 0, 90));
-                //transform.position += new Vector3(0, 90, 0);
-                //transform.localScale += new Vector3(0, 90, 00);
-                transform.Rotate(0, 0, 90);
-                //transform.position = new Vector3(transform.position.x)
+                transform.Rotate(0, 0, 90f);
                 if (!checkIfInsideGrid())
                 {
-                    //transform.position += new Vector3(0, -90, 0);
-                    //transform.localScale += new Vector3(0, -90, 0);
                     transform.Rotate(0, 0, -90);
                 }
-                    //transform.rotation = new Quaternion(0, 0, 90, 0);
-                //transform.eulerAngles = new Vector3(0, 0, -90);
                 else
                     UpdateGrid();
-               
+
 
                 /*if (limitRotation && transform.rotation.eulerAngles.z >= 90)
                 {
@@ -156,41 +147,41 @@ public class Figures : MonoBehaviour {
         {
             for (int x = -5; x < 6; ++x)
             {
-                if (grid[x+5,y+8] != null)
+                if (grid[x + 5, y + 8] != null)
                 {
-                    if (grid[x+5, y+8].parent == transform)
-                        grid[x+5, y+8] = null;
+                    if (grid[x + 5, y + 8].parent == transform)
+                        grid[x + 5, y + 8] = null;
                 }
             }
         }
         foreach (Transform figure in transform)
         {
-            Vector2 position = figure.position;
+            Vector2 position = Round(figure.position);
             if (position.y < 9)
             {
-                grid[(int)(position.x)+5, (int)(position.y)+8] = figure;
+                grid[(int)(position.x) + 5, (int)(position.y) + 8] = figure;
             }
         }
     }
 
     public Transform GetTransformAtGridPosition(Vector2 position)
     {
-        if (position.y > 10)
+        if (position.y > 8)
             return null;
         else
-            return grid[(int)(position.x)+5, (int)(position.y)+8];
+            return grid[(int)(position.x) + 5, (int)(position.y) + 8];
     }
 
     public bool checkIfInsideGrid()
     {
         foreach (Transform figure in transform)
         {
-            Vector2 position = figure.position;
+            Vector2 position = Round(figure.position);
             if (!checkLimitation(position))
             {
                 return false;
             }
-            if (GetTransformAtGridPosition(position) != null && 
+            if (GetTransformAtGridPosition(position) != null &&
                 GetTransformAtGridPosition(position).parent != transform)
             {
                 return false;
@@ -204,10 +195,15 @@ public class Figures : MonoBehaviour {
         return (position.x < 6 && position.x > -6 && position.y > -9);
     }
 
+    public Vector2 Round(Vector2 position)
+    {
+        return new Vector2(Mathf.Round(position.x), Mathf.Round(position.y));
+    }
+
     public void spawnNewFigure()
     {
-        GameObject figure = (GameObject)Instantiate(Resources.Load(getRandomFigure(), typeof(GameObject)), 
-            new Vector2(0, 9), Quaternion.identity);
+        GameObject figure = (GameObject)Instantiate(Resources.Load(getRandomFigure(), typeof(GameObject)),
+            new Vector2(0, 8), Quaternion.identity);
     }
 
     public string getRandomFigure()
@@ -240,5 +236,82 @@ public class Figures : MonoBehaviour {
                 break;
         }
         return randomFigureName;
+    }
+
+    public bool IsFullRowAt(int y)
+    {
+        for (int x = -5; x < 6; x++)
+        {
+            if (grid[x + 5, y + 8] == null)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void DeleteRowAt(int y)
+    {
+        for (int x = -5; x < 6; x++)
+        {
+            Destroy(grid[x + 5, y + 8].gameObject);
+            grid[x + 5, y + 8] = null;
+        }
+    }
+
+    public void MoveRowDown(int y)
+    {
+        for (int x = -5; x < 6; x++)
+        {
+            if (grid[x + 5, y + 8] != null)
+            {
+                grid[x + 5, y + 8 - 1] = grid[x + 5, y + 8];
+                grid[x + 5, y + 8] = null;
+                grid[x + 5, y + 8 - 1].position += new Vector3(0, -1, 0);
+            }
+        }
+    }
+
+    public void MoveAllRowsDown(int y)
+    {
+        for (int i = y; i < 6; i++)
+            MoveRowDown(i);
+    }
+
+    public void DeleteRowsIfNeeded()
+    {
+        for (int y = -8; y < 10; y++)
+        {
+            if (IsFullRowAt(y))
+            {
+                DeleteRowAt(y);
+                MoveAllRowsDown(y + 1);
+                y--;
+            }
+        }
+    }
+
+    public bool checkIfGameOver()
+    {
+        for (int x = -5; x < 6; x++)
+        {
+            foreach (Transform piece in transform)
+            {
+                Vector2 position = Round(piece.position);
+                if (position.y > 6)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    public void loadGameOver()
+    {
+        Application.LoadLevel("GameOver");
+    }
+
+    public void playAgain()
+    {
+        Application.LoadLevel("Tetris");
     }
 }
