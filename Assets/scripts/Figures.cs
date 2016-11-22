@@ -8,12 +8,8 @@ public class Figures : MonoBehaviour
     public float fallSpeed = 1;
 
     public bool allowRotation = true;
-    //public bool limitRotation = false;
 
-    public int gridWidth = 11;
-    public int gridHeight = 18;
-
-    public static Transform[,] grid = new Transform[20, 30];
+    public static Transform[,] grid = new Transform[13, 19];
 
     // Use this for initialization
     void Start()
@@ -298,7 +294,7 @@ public class Figures : MonoBehaviour
             foreach (Transform piece in transform)
             {
                 Vector2 position = Round(piece.position);
-                if (position.y > 6)
+                if (position.y > 9)
                     return true;
             }
         }
