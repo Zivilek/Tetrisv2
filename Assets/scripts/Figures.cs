@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
+using System.Linq;
 
 public class Figures : MonoBehaviour
 {
@@ -8,9 +10,20 @@ public class Figures : MonoBehaviour
     public float fallSpeed = 1;
 
     public bool allowRotation = true;
+    public static bool figurejustSpawned = false;
 
     public static Transform[,] grid = new Transform[13, 19];
 
+    public static GameObject previewFigure;
+    public static GameObject nextFigure;
+
+    public Vector2 previewFigurePosition = new Vector2(10, 0);
+
+    public static bool gameStarted = false;
+
+    public static int rowsScored;
+    public static int score = 0;
+    public Text scoreText;
     // Use this for initialization
     void Start()
     {
@@ -48,20 +61,7 @@ public class Figures : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.DownArrow) || Time.time - fall >= fallSpeed)
         {
-            transform.position += new Vector3(0, -1, 0);
-
-            if (!checkIfInsideGrid())
-            {
-                transform.position += new Vector3(0, 1, 0);
-                DeleteRowsIfNeeded();
-                if (checkIfGameOver())
-                    loadGameOver();
-                enabled = false;
-                spawnNewFigure();
-            }
-            else
-                UpdateGrid();
-            fall = Time.time;
+            moveFigureDown();
         }
         else if (Input.GetKeyDown(KeyCode.UpArrow))
         {
@@ -74,67 +74,41 @@ public class Figures : MonoBehaviour
                 }
                 else
                     UpdateGrid();
-
-
-                /*if (limitRotation && transform.rotation.eulerAngles.z >= 90)
-                {
-                    transform.Rotate(0, 0, -180);
-                    if (checkIfInsideGrid())
-                    {
-                        UpdateGrid();
-                    }
-                    else
-                        transform.Rotate(0, 0, -90);
-                }
-                else if (checkIfInsideGrid())
-                {
-                    UpdateGrid();
-                }
-                else if (!checkIfInsideGrid())
-                {
-                    transform.Rotate(0, 0, -90);
-                }*/
-
-                /*if (limitRotation)
-                {
-                    if(transform.rotation.eulerAngles.z >= 90)
-                    {
-                        transform.Rotate(0, 0, -90);
-                    }
-                    else
-                    {
-                        transform.Rotate(0, 0, 90);
-                    }
-                }
-                else
-                {
-                    transform.Rotate(0, 0, 90);
-                }
-                if (checkIfInsideGrid())
-                {
-                    UpdateGrid();
-                }
-                else
-                {
-                    if (limitRotation)
-                    {
-                        if(transform.rotation.eulerAngles.z >= 90)
-                        {
-                            transform.Rotate(0, 0, -90);
-                        }
-                        else
-                        {
-                            transform.Rotate(0, 0, 90);
-                        }
-                    }
-                    else
-                    {
-                        transform.Rotate(0, 0, -90);
-                    }
-                }
-            }*/
             }
         }
+        else if (Input.GetKeyDown(KeyCode.Space))
+        {
+            while (figurejustSpawned == false)
+            {
+                moveFigureDown();
+            }
+        }
+    }
+
+    public void moveFigureDown()
+    {
+        transform.position += new Vector3(0, -1, 0);
+
+        if (!checkIfInsideGrid())
+        {
+            transform.position += new Vector3(0, 1, 0);
+            DeleteRowsIfNeeded();
+            if (checkIfGameOver())
+                loadGameOver();
+            score += rowsScored * 100;
+            scoreText = GetTextObjectByName("playerScore");
+            scoreText.text = score.ToString();
+            enabled = false;
+            spawnNewFigure();
+            figurejustSpawned = true;
+        }
+        else
+        {
+            UpdateGrid();
+            figurejustSpawned = false;
+        }
+
+        fall = Time.time;
     }
 
     public void UpdateGrid()
@@ -196,10 +170,34 @@ public class Figures : MonoBehaviour
         return new Vector2(Mathf.Round(position.x), Mathf.Round(position.y));
     }
 
+
+    public Text GetTextObjectByName(string name)
+    {
+        var canvas = GameObject.Find("Canvas");
+        var texts = canvas.GetComponentsInChildren<Text>();
+        return texts.FirstOrDefault(textObject => textObject.name == name);
+    }
+
     public void spawnNewFigure()
     {
-        GameObject figure = (GameObject)Instantiate(Resources.Load(getRandomFigure(), typeof(GameObject)),
-            new Vector2(0, 8), Quaternion.identity);
+        if (!gameStarted)
+        {
+            gameStarted = true;
+            nextFigure = (GameObject)Instantiate(Resources.Load(getRandomFigure(), typeof(GameObject)), 
+                new Vector2(0, 8), Quaternion.identity);
+            previewFigure = (GameObject)Instantiate(Resources.Load(getRandomFigure(), typeof(GameObject)),
+                previewFigurePosition, Quaternion.identity);
+            previewFigure.GetComponent<Figures>().enabled = false;
+        }
+        else
+        {
+            previewFigure.GetComponent<Figures>().transform.localPosition = new Vector2(0, 8);
+            nextFigure = previewFigure;
+            nextFigure.GetComponent<Figures>().enabled = true;
+            previewFigure = (GameObject)Instantiate(Resources.Load(getRandomFigure(), typeof(GameObject)),
+               previewFigurePosition, Quaternion.identity);
+            previewFigure.GetComponent<Figures>().enabled = false;
+        }
     }
 
     public string getRandomFigure()
@@ -276,6 +274,7 @@ public class Figures : MonoBehaviour
 
     public void DeleteRowsIfNeeded()
     {
+        rowsScored = 0;
         for (int y = -8; y < 10; y++)
         {
             if (IsFullRowAt(y))
@@ -283,6 +282,7 @@ public class Figures : MonoBehaviour
                 DeleteRowAt(y);
                 MoveAllRowsDown(y + 1);
                 y--;
+                rowsScored++;
             }
         }
     }
@@ -302,12 +302,15 @@ public class Figures : MonoBehaviour
     }
 
     public void loadGameOver()
-    {
+    {  
         Application.LoadLevel("GameOver");
     }
 
     public void playAgain()
     {
+        gameStarted = false;
+#pragma warning disable CS0618 // Type or member is obsolete
         Application.LoadLevel("Tetris");
+#pragma warning restore CS0618 // Type or member is obsolete
     }
 }
