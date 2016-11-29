@@ -199,7 +199,9 @@ public class Gameplay : MonoBehaviour {
         {
             foreach (Transform piece in figure.transform)
             {
-                Vector2 position = Round(piece.position);
+                //Vector2 position = Round(piece.position);
+                Vector2 position = piece.position;
+                round(ref position);
                 if (position.y > 9)
                     return true;
             }
@@ -233,7 +235,9 @@ public class Gameplay : MonoBehaviour {
     {
         foreach (Transform tetrisFigure in figure.transform)
         {
-            Vector2 position = FindObjectOfType<Gameplay>().Round(tetrisFigure.position);
+            Vector2 position = tetrisFigure.position;
+            round(ref position);
+            //Vector2 position = FindObjectOfType<Gameplay>().Round(tetrisFigure.position); old
             if (!FindObjectOfType<Gameplay>().checkLimitation(position))
             {
                 return false;
