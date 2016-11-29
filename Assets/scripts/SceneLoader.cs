@@ -3,9 +3,10 @@ using System.Collections;
 
 public class SceneLoader : MonoBehaviour {
 
+    private Gameplay game = new Gameplay();
 	// Use this for initialization
 	void Start () {
-	
+	    
 	}
 	
 	// Update is called once per frame
@@ -20,9 +21,7 @@ public class SceneLoader : MonoBehaviour {
 
     public void playAgain()
     {
-        FindObjectOfType<Gameplay>().GameStarted = false;
-#pragma warning disable CS0618 // Type or member is obsolete
+        game.GameStarted = false;
         Application.LoadLevel("Tetris");
-#pragma warning restore CS0618 // Type or member is obsolete
     }
 }

@@ -2,12 +2,10 @@
 using UnityEngine.UI;
 using System.Collections;
 using System.Linq;
-using System.Configuration;
-using System;
 
 public class Figure : MonoBehaviour
 {
-
+    public event ScoreTracker.RowDeletedHandler OnDeletedRow;
     public float fall = 0;
     public float fallSpeed = 1;
 
@@ -16,11 +14,11 @@ public class Figure : MonoBehaviour
     public float count = 0.5f;
     //private int pointsForRow = Convert.ToBoolean(ConfigurationManager.AppSettings["PointsForRow"]);
     public static SceneLoader scene = new SceneLoader();
-
+    public ScoreTracker scoreTracker;
     //public Gameplay gameplay = new Gameplay();
-
     //logger instance
     public ILog logger = new FileLog();
+
 
     public float Fall
     {
@@ -38,7 +36,7 @@ public class Figure : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        
+        scoreTracker = new ScoreTracker(this);
     }
 
     // Update is called once per frame
@@ -107,7 +105,31 @@ public class Figure : MonoBehaviour
             }
         }
     }
-    
+
+    public void moveFigureDown(Figure figure)
+    {
+        transform.position += new Vector3(0, -1, 0);
+
+        if (!FindObjectOfType<Gameplay>().checkIfInsideGrid(this))
+        {
+            transform.position += new Vector3(0, 1, 0);
+            FindObjectOfType<Gameplay>().DeleteRowsIfNeeded();
+            if (FindObjectOfType<Gameplay>().checkIfGameOver(this))
+                scene.loadGameOver();
+            OnDeletedRow(this, new RowDeletedArgs(FindObjectOfType<Gameplay>().RowsScored));
+            enabled = false;
+            FindObjectOfType<Gameplay>().spawnNewFigure();
+            FindObjectOfType<Gameplay>().FigurejustSpawned = true;
+        }
+        else
+        {
+            FindObjectOfType<Gameplay>().UpdateGrid(this, logger);
+            FindObjectOfType<Gameplay>().FigurejustSpawned = false;
+        }
+
+        fall = Time.time;
+    }
+
     public void checkInputWhenHolding()
     {
         if (Input.GetKey(KeyCode.DownArrow))
@@ -120,31 +142,5 @@ public class Figure : MonoBehaviour
         }
         else
             count = 0.5f;
-    }
-
-    public void moveFigureDown(Figure figure)
-    {
-        transform.position += new Vector3(0, -1, 0);
-
-        if (!FindObjectOfType<Gameplay>().checkIfInsideGrid(this))
-        {
-            transform.position += new Vector3(0, 1, 0);
-            FindObjectOfType<Gameplay>().DeleteRowsIfNeeded();
-            if (FindObjectOfType<Gameplay>().checkIfGameOver(this))
-                scene.loadGameOver();
-            FindObjectOfType<Gameplay>().Score += FindObjectOfType<Gameplay>().RowsScored * 100;
-            FindObjectOfType<Gameplay>().scoreText = FindObjectOfType<Gameplay>().GetTextObjectByName("playerScore");
-            FindObjectOfType<Gameplay>().scoreText.text = FindObjectOfType<Gameplay>().Score.ToString();
-            enabled = false;
-            FindObjectOfType<Gameplay>().spawnNewFigure();
-            FindObjectOfType<Gameplay>().FigurejustSpawned = true;
-        }
-        else
-        {
-            FindObjectOfType<Gameplay>().UpdateGrid(this, logger);
-            FindObjectOfType<Gameplay>().FigurejustSpawned = false;
-        }
-
-        fall = Time.time;
     }
 }
