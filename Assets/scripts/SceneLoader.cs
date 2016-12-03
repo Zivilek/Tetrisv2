@@ -4,15 +4,6 @@ using System.Collections;
 public class SceneLoader : MonoBehaviour {
 
     private Gameplay game = new Gameplay();
-	// Use this for initialization
-	void Start () {
-	    
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
 
     public void loadGameOver()
     {

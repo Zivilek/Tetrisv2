@@ -12,11 +12,10 @@ public class Figure : MonoBehaviour
     public bool allowRotation = true;
 
     public float count = 0.5f;
-    //private int pointsForRow = Convert.ToBoolean(ConfigurationManager.AppSettings["PointsForRow"]);
+
     public static SceneLoader scene = new SceneLoader();
     public ScoreTracker scoreTracker;
-    //public Gameplay gameplay = new Gameplay();
-    //logger instance
+
     public ILog logger = new FileLog();
 
 
@@ -33,13 +32,11 @@ public class Figure : MonoBehaviour
         }
     }
 
-    // Use this for initialization
     void Start()
     {
         scoreTracker = new ScoreTracker(this);
     }
 
-    // Update is called once per frame
     void Update()
     {
         checkUserInput();
@@ -50,23 +47,11 @@ public class Figure : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
-            transform.position += new Vector3(1, 0, 0);
-            if (!FindObjectOfType<Gameplay>().checkIfInsideGrid(this))
-            {
-                transform.position += new Vector3(-1, 0, 0);
-            }
-            else
-                FindObjectOfType<Gameplay>().UpdateGrid(this, logger);
+            moveFigureRight();
         }
         else if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            transform.position += new Vector3(-1, 0, 0);
-            if (!FindObjectOfType<Gameplay>().checkIfInsideGrid(this))
-            {
-                transform.position += new Vector3(1, 0, 0);
-            }
-            else
-                FindObjectOfType<Gameplay>().UpdateGrid(this, logger);
+            moveFigureLeft();
         }
         else if (Input.GetKeyDown(KeyCode.DownArrow) || Time.time - fall >= fallSpeed)
         {
@@ -74,28 +59,7 @@ public class Figure : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.UpArrow))
         {
-            if (allowRotation)
-            {
-                transform.Rotate(0, 0, 90f);
-                if (!FindObjectOfType<Gameplay>().checkIfInsideGrid(this))
-                {
-                    foreach (Transform figurePiece in transform)
-                    {
-                        if (figurePiece.position.x >= 6)
-                        {
-                            transform.position += new Vector3(-1, 0, 0);
-                        }
-                        else if (figurePiece.position.x <= -6)
-                        {
-                            transform.position += new Vector3(1, 0, 0);
-                        }
-                    }
-                    if (!FindObjectOfType<Gameplay>().checkIfInsideGrid(this))
-                        transform.Rotate(0, 0, -90f);
-                }
-                else
-                    FindObjectOfType<Gameplay>().UpdateGrid(this, logger);
-            }
+            rotateFigure();
         }
         else if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -130,6 +94,54 @@ public class Figure : MonoBehaviour
         fall = Time.time;
     }
 
+    public void moveFigureRight()
+    {
+        transform.position += new Vector3(1, 0, 0);
+        if (!FindObjectOfType<Gameplay>().checkIfInsideGrid(this))
+        {
+            transform.position += new Vector3(-1, 0, 0);
+        }
+        else
+            FindObjectOfType<Gameplay>().UpdateGrid(this, logger);
+    }
+
+    public void moveFigureLeft()
+    {
+        transform.position += new Vector3(-1, 0, 0);
+        if (!FindObjectOfType<Gameplay>().checkIfInsideGrid(this))
+        {
+            transform.position += new Vector3(1, 0, 0);
+        }
+        else
+            FindObjectOfType<Gameplay>().UpdateGrid(this, logger);
+    }
+
+    public void rotateFigure()
+    {
+        if (allowRotation)
+        {
+            transform.Rotate(0, 0, 90f);
+            if (!FindObjectOfType<Gameplay>().checkIfInsideGrid(this))
+            {
+                foreach (Transform figurePiece in transform)
+                {
+                    if (figurePiece.position.x >= 6)
+                    {
+                        transform.position += new Vector3(-1, 0, 0);
+                    }
+                    else if (figurePiece.position.x <= -6)
+                    {
+                        transform.position += new Vector3(1, 0, 0);
+                    }
+                }
+                if (!FindObjectOfType<Gameplay>().checkIfInsideGrid(this))
+                    transform.Rotate(0, 0, -90f);
+            }
+            else
+                FindObjectOfType<Gameplay>().UpdateGrid(this, logger);
+        }
+    }
+
     public void checkInputWhenHolding()
     {
         if (Input.GetKey(KeyCode.DownArrow))
@@ -138,6 +150,30 @@ public class Figure : MonoBehaviour
             if (count < 0)
             {
                 moveFigureDown(this);
+            }
+        }
+        else if (Input.GetKey(KeyCode.RightArrow))
+        {
+            count -= Time.deltaTime;
+            if (count < 0)
+            {
+                moveFigureRight();
+            }
+        }
+        else if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            count -= Time.deltaTime;
+            if (count < 0)
+            {
+                moveFigureLeft();
+            }
+        }
+        else if (Input.GetKey(KeyCode.UpArrow))
+        {
+            count -= Time.deltaTime;
+            if (count < 0)
+            {
+                rotateFigure();
             }
         }
         else
